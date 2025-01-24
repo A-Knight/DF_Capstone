@@ -24,12 +24,16 @@ def get_token():
     auth_base64 = str(base64.b64encode(auth_bytes), "utf-8")
     
     base_url = "https://accounts.spotify.com/api/token"
+    
+    
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
+        #Authorization data
         "Authorization": "Basic " + auth_base64
     }
     data = {"grant_type": "client_credentials"}
     result = post(base_url, headers=headers, data=data)
+    #convert json data to dictionary
     json_result = json.loads(result.content)
     token = json_result["access_token"]
     return token
@@ -57,7 +61,7 @@ def search_for_artist(token, artist_name):
     try:
         json_result = json.loads(result.content)
     except Exception as e:
-        print(f"Error parsing JSON for {artist_name}: {e}")
+        print(f"Error parsing JSON for {artist_name}")
         return None
 
     # Check for errors in the JSON response
@@ -124,10 +128,11 @@ def get_artist_info(artist_name):
     all_info_df = convert_mil_to_sec(artist_df)
     return all_info_df
 
-#-------------------------------------------------------------------#
+#----------------------------- All artists top 10 songs -----------------------------#
 
-# List of artists
-artists = ["Asake","Burna-Boy","Jungle","Kendrick-Lamar", "SZA","Dua-Lipa", "JID","Teddy-Swims", "Bruno-Mars", "Lady-Gaga", "Coldplay", "Taylor-Swift", "Bad-Bunny", "The-Weeknd", "Billie-Eilish", "Ariana-Grande", "Drake", "Rihanna", "Ed-Sheeran", "Sabrina-Carpenter", "Justin-Bieber", "Ariana-Grande", "Eminem", "Kanye-West", "Post-Malone", "BTS", "Travis-Scott", "Doechii", "Imagine-Dragons", "J-Balvin", "Green-Day", "GloRilla", "Childish-Gambino", "Whitney-Houston", "Linkin-Park", "Donna-Summer"]
+# Read from artist_list.txt
+with open("utils/artist_list.txt", "r") as file:
+    artists = [line.strip() for line in file.readlines()]    
 
 # Initialize an empty list to store data for all artists
 all_artists_data = []
@@ -151,23 +156,30 @@ else:
 # Display the final DataFrame
 # print(final_df)
 
+#-------------------- Create Database connection -------------------#
+
+def create_db_conn():
+    # Load environment variables from the .env file
+    load_dotenv()
+
+    # Database connection parameters
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
+    database = os.getenv("DB_NAME")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASS")
+
+    # Create the connection string
+    connection_string = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
+
+    # Create an SQLAlchemy engine
+    engine = create_engine(connection_string)
+    
+    return engine
+
 #---------------------- Load Data into Database ---------------------#
 
-# Load environment variables from the .env file
-load_dotenv()
-
-# Database connection parameters
-host = os.getenv("DB_HOST")
-port = os.getenv("DB_PORT")
-database = os.getenv("DB_NAME")
-user = os.getenv("DB_USER")
-password = os.getenv("DB_PASS")
-
-# Create the connection string
-connection_string = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
-
-# Create an SQLAlchemy engine
-engine = create_engine(connection_string)
+engine = create_db_conn()
 
 # Write the DataFrame to the pagila database in the 'student' schema
 table_name = "ak_spotify"  

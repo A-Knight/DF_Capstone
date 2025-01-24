@@ -1,7 +1,5 @@
 # Extraction Script Instructions
 
-### These are the necessary steps to run the data_extraction.py script
-
 - Step 1. Insert necessary files
 
   > Insert the .env file into root of the folder
@@ -13,6 +11,17 @@
 - Step 3. Run the script
   > python data_extraction.py (For windows/linux)
 
+---
+
 ### Cron Details
 
 - This script should be run once a day
+
+---
+
+### Project Overview
+
+- Extract data about artists and their most popular songs from Spotify API
+- Perform any necessary cleaning and transformation of data
+- Load data onto a database
+- Visualize data

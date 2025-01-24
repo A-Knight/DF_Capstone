@@ -8,20 +8,8 @@ from data_extraction import get_artist_info
 import plotly.express as px
 import seaborn as sns
 from wordcloud import WordCloud
+from data_extraction import create_db_conn
 
-# Load environment variables
-load_dotenv()
-
-# Database connection parameters
-host = os.getenv("DB_HOST")
-port = os.getenv("DB_PORT")
-database = os.getenv("DB_NAME")
-user = os.getenv("DB_USER")
-password = os.getenv("DB_PASS")
-
-# Create database connection
-connection_string = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
-engine = create_engine(connection_string)
 
 st.markdown(
     "<h1 style='color: #1DB954; font-size: 45px'>Spotify Artists and Their Popularity</h1>", 
@@ -31,25 +19,18 @@ st.markdown(
 with st.expander("What is popularity?"):
     st.write("The popularity of a track is a value between 0 and 100, with 100 being the most popular. The popularity is calculated by algorithm and is based, in the most part, on the total number of plays the track has had and how recent those plays are.")
     st.write("The artist's popularity is calculated from the popularity of all the artist's tracks")
+    
+#Create database connection
+engine = create_db_conn()
 
 # Fetch data from database
-query = "SELECT * FROM student.ak_spotify"
-data = pd.read_sql(query, engine)
+with open("utils/all_data.sql", "r") as file:
+    all_data_query = file.read()
+data = pd.read_sql(all_data_query, engine)
 
 #duration_min_sec is in db as varchar. Have to convert to int in order to aggregate
-duration_query = """
-SELECT 
-    artist_name, 
-    artist_popularity, 
-    AVG((SUBSTRING(duration_min_sec FROM '^([0-9]+):')::int * 60 + 
-         SUBSTRING(duration_min_sec FROM ':([0-9]+)$')::int)) AS avg_song_length_seconds
-FROM 
-    student.ak_spotify
-GROUP BY 
-    artist_name, artist_popularity
-ORDER BY 
-    artist_popularity DESC;
-"""
+with open("utils/avg_duration.sql", "r") as file:
+    duration_query = file.read()
 duration_data = pd.read_sql(duration_query, engine)
 
 
@@ -136,7 +117,7 @@ elif visualization_option == "Song Popularity by Artist":
     )
 
     # Scale normalized popularity to define bubble sizes
-    bubble_sizes = artist_popularity["normalized_popularity"] * 1000  # Adjust multiplier for size
+    bubble_sizes = artist_popularity["normalized_popularity"] * 1000  
 
     # Create the plot
     fig, ax = plt.subplots(figsize=(15, 8))
@@ -174,7 +155,7 @@ if artist_name.strip():
         # Fetch artist information and their songs
         artist_df = get_artist_info(artist_name)
         
-        # Get the correct artist name from the dataframe
+        # Get the correct artist name from the dataframe. Even if an incorrect name is entered displays the name of next closest
         if not artist_df.empty:
             correct_artist_name = artist_df["artist_name"].iloc[0]
             
