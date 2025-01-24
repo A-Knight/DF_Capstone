@@ -53,7 +53,7 @@ ORDER BY
 duration_data = pd.read_sql(duration_query, engine)
 
 
-#-------------- SELECT VISUAL ------------------#
+#----------------- SELECT VISUAL ------------------#
 
 # Create a select box for choosing the visualization
 visualization_option = st.selectbox(
@@ -149,10 +149,6 @@ elif visualization_option == "Song Popularity by Artist":
 
     plt.tight_layout()
     st.pyplot(fig)
-
-
-#---------- End Select ------#######
-
 
 #--------------- Search For an Artist -----------------#
 

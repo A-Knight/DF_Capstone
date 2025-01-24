@@ -45,7 +45,7 @@ def get_token():
 def get_header(token):
     return {"Authorization": "Bearer " + token}
 
-#--------------------------------------------------------------------#
+#-------------------------------------------------------------------#
 def search_for_artist(token, artist_name):
     url = "https://api.spotify.com/v1/search"
     headers = get_header(token)
@@ -75,7 +75,7 @@ def search_for_artist(token, artist_name):
     
     return json_result[0]
 
-#------------------- Get the top 10 tracks for artist--------------#
+#------------------ Get the top 10 tracks for artist --------------#
 
 def get_songs_by_artist(token, artist_id):
     url = f"https://api.spotify.com/v1/artists/{artist_id}/top-tracks?country=US"
