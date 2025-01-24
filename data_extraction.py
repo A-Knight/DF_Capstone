@@ -24,8 +24,7 @@ def get_token():
     auth_base64 = str(base64.b64encode(auth_bytes), "utf-8")
     
     base_url = "https://accounts.spotify.com/api/token"
-    
-    
+        
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         #Authorization data

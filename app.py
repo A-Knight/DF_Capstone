@@ -38,110 +38,114 @@ duration_data = pd.read_sql(duration_query, engine)
 
 # Create a select box for choosing the visualization
 visualization_option = st.selectbox(
-    "Select a visualization:",
+    "What do you want to see:",
     [
+        "Select a visualization",
         "Artist Popularity vs. Song Length",
         "Artist Popularity",
         "Song Popularity by Artist"
     ]
 )
 
-# Option 1: Scatter Plot
-if visualization_option == "Artist Popularity vs. Song Length":
-    st.subheader("Artist Popularity vs. Song Length")
+if visualization_option == "Select a visualization":
+    st.write("Please select an option from the dropdown.")
+else:
+    # Option 1: Scatter Plot
+    if visualization_option == "Artist Popularity vs. Song Length":
+        st.subheader("Artist Popularity vs. Song Length")
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+        fig, ax = plt.subplots(figsize=(12, 8))
 
-    scatter = ax.scatter(
-        duration_data["avg_song_length_seconds"], 
-        duration_data["artist_popularity"], 
-        c=duration_data["artist_popularity"], 
-        cmap="viridis", 
-        s=100, 
-        alpha=0.8
-    )
-
-    ax.set_title("Artist Popularity vs. Average Song Length", fontsize=16)
-    ax.set_xlabel("Average Song Length (seconds)", fontsize=14)
-    ax.set_ylabel("Artist Popularity", fontsize=14)
-
-    for i, artist in duration_data.iterrows():
-        ax.text(
-            artist["avg_song_length_seconds"], 
-            artist["artist_popularity"] + 0.5,  
-            artist["artist_name"], 
-            fontsize=10, 
-            alpha=0.7
+        scatter = ax.scatter(
+            duration_data["avg_song_length_seconds"], 
+            duration_data["artist_popularity"], 
+            c=duration_data["artist_popularity"], 
+            cmap="viridis", 
+            s=100, 
+            alpha=0.8
         )
 
-    cbar = plt.colorbar(scatter, ax=ax)
-    cbar.set_label("Artist Popularity", fontsize=12)
+        ax.set_title("Artist Popularity vs. Average Song Length", fontsize=16)
+        ax.set_xlabel("Average Song Length (seconds)", fontsize=14)
+        ax.set_ylabel("Artist Popularity", fontsize=14)
 
-    st.pyplot(fig)
+        for i, artist in duration_data.iterrows():
+            ax.text(
+                artist["avg_song_length_seconds"], 
+                artist["artist_popularity"] + 0.5,  
+                artist["artist_name"], 
+                fontsize=10, 
+                alpha=0.7
+            )
+
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label("Artist Popularity", fontsize=12)
+
+        st.pyplot(fig)
 
 
-# Option 2: Word Cloud
-elif visualization_option == "Artist Popularity":
-    st.subheader("Artist Popularity")
+    # Option 2: Word Cloud
+    elif visualization_option == "Artist Popularity":
+        st.subheader("Artist Popularity")
 
-    artist_popularity = data.groupby("artist_name")["artist_popularity"].mean()
-    wordcloud_data = artist_popularity.to_dict()
+        artist_popularity = data.groupby("artist_name")["artist_popularity"].mean()
+        wordcloud_data = artist_popularity.to_dict()
 
-    wordcloud = WordCloud(
-        width=1600, 
-        height=800, 
-        background_color="black", 
-        colormap="viridis", 
-        contour_color="white", 
-        contour_width=1, 
-        relative_scaling=0.5
-    ).generate_from_frequencies(wordcloud_data)
+        wordcloud = WordCloud(
+            width=1600, 
+            height=800, 
+            background_color="black", 
+            colormap="viridis", 
+            contour_color="white", 
+            contour_width=1, 
+            relative_scaling=0.5
+        ).generate_from_frequencies(wordcloud_data)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.imshow(wordcloud, interpolation="bilinear")
-    ax.axis("off")
-    st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.imshow(wordcloud, interpolation="bilinear")
+        ax.axis("off")
+        st.pyplot(fig)
 
-# Option 3: Bubble Chart
-elif visualization_option == "Song Popularity by Artist":
-    st.subheader("Song Popularity by Artist")
+    # Option 3: Bubble Chart
+    elif visualization_option == "Song Popularity by Artist":
+        st.subheader("Song Popularity by Artist")
 
-    # Group data by artist and calculate mean popularity
-    artist_popularity = data.groupby("artist_name")["song_popularity"].mean().reset_index()
+        # Group data by artist and calculate mean popularity
+        artist_popularity = data.groupby("artist_name")["song_popularity"].mean().reset_index()
 
-    # Normalize song popularity for bubble sizes (0 to 100 range, for example)
-    min_popularity = artist_popularity["song_popularity"].min()
-    max_popularity = artist_popularity["song_popularity"].max()
-    artist_popularity["normalized_popularity"] = (
-        (artist_popularity["song_popularity"] - min_popularity) / (max_popularity - min_popularity)
-    )
+        # Normalize song popularity for bubble sizes (0 to 100 range, for example)
+        min_popularity = artist_popularity["song_popularity"].min()
+        max_popularity = artist_popularity["song_popularity"].max()
+        artist_popularity["normalized_popularity"] = (
+            (artist_popularity["song_popularity"] - min_popularity) / (max_popularity - min_popularity)
+        )
 
-    # Scale normalized popularity to define bubble sizes
-    bubble_sizes = artist_popularity["normalized_popularity"] * 1000  
+        # Scale normalized popularity to define bubble sizes
+        bubble_sizes = artist_popularity["normalized_popularity"] * 1000  
 
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(15, 8))
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(15, 8))
 
-    scatter = ax.scatter(
-        artist_popularity["artist_name"], 
-        artist_popularity["song_popularity"], 
-        s=bubble_sizes, 
-        alpha=0.6, 
-        color="dodgerblue", 
-        edgecolors="black", 
-        linewidth=0.5
-    )
+        scatter = ax.scatter(
+            artist_popularity["artist_name"], 
+            artist_popularity["song_popularity"], 
+            s=bubble_sizes, 
+            alpha=0.6, 
+            color="dodgerblue", 
+            edgecolors="black", 
+            linewidth=0.5
+        )
 
-    # Add labels and grid
-    ax.set_title("Average Song Popularity by Artist", fontsize=18, color="black", pad=20)
-    ax.set_xlabel("Artist", fontsize=14)
-    ax.set_ylabel("Average Song Popularity", fontsize=14)
-    ax.set_xticks(range(len(artist_popularity["artist_name"])))
-    ax.set_xticklabels(artist_popularity["artist_name"], rotation=90, fontsize=10)
-    ax.grid(True, linestyle="--", alpha=0.5)
+        # Add labels and grid
+        ax.set_title("Average Song Popularity by Artist", fontsize=18, color="black", pad=20)
+        ax.set_xlabel("Artist", fontsize=14)
+        ax.set_ylabel("Average Song Popularity", fontsize=14)
+        ax.set_xticks(range(len(artist_popularity["artist_name"])))
+        ax.set_xticklabels(artist_popularity["artist_name"], rotation=90, fontsize=10)
+        ax.grid(True, linestyle="--", alpha=0.5)
 
-    plt.tight_layout()
-    st.pyplot(fig)
+        plt.tight_layout()
+        st.pyplot(fig)
 
 
 #--------------- Search For an Artist -----------------#
