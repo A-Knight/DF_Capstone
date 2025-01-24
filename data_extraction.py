@@ -16,7 +16,8 @@ client_secret = os.getenv("CLIENT_SECRET")
 #Test they have been loaded correctly
 # print(client_id, client_secret)
 
-#-------------------------------------------------------------------
+#-------------------------------------------------------------------#
+
 # Uses client credentials to request access token
 def get_token():
     auth_info = client_id + ":" + client_secret
@@ -38,13 +39,13 @@ def get_token():
 
 # Show access token received from spotify
 # print(token)
-#-------------------------------------------------------------------
+#-------------------------------------------------------------------#
 
 #Forms header for whenever we send requests
 def get_header(token):
     return {"Authorization": "Bearer " + token}
 
-#-------------------------------------------------------------------
+#--------------------------------------------------------------------#
 def search_for_artist(token, artist_name):
     url = "https://api.spotify.com/v1/search"
     headers = get_header(token)
@@ -53,7 +54,7 @@ def search_for_artist(token, artist_name):
     query_url = url + query
     
     result = get(query_url, headers=headers)
-    # print(f"Raw response for {artist_name}: {result.content}")  # Debugging line
+
     try:
         json_result = json.loads(result.content)
     except Exception as e:
@@ -73,7 +74,8 @@ def search_for_artist(token, artist_name):
         return None
     
     return json_result[0]
-#----------------------------------------------------------------
+
+#------------------- Get the top 10 tracks for artist--------------#
 
 def get_songs_by_artist(token, artist_id):
     url = f"https://api.spotify.com/v1/artists/{artist_id}/top-tracks?country=US"
@@ -82,7 +84,7 @@ def get_songs_by_artist(token, artist_id):
     json_result = json.loads(result.content)["tracks"]
     return json_result
 
-#----------------------------------------------------------------
+#-------------------------------------------------------------------#
 
 #Convert song duration from milliseconds to minutes:seconds
 def convert_mil_to_sec(df):
@@ -94,7 +96,7 @@ def convert_mil_to_sec(df):
     
     return df
 
-#----------------------------------------------------------------
+#-------------------------------------------------------------------#
 
 #Construct Dataframe for an individual artist
 def get_artist_info(artist_name):
@@ -123,7 +125,7 @@ def get_artist_info(artist_name):
     all_info_df = convert_mil_to_sec(artist_df)
     return all_info_df
 
-#------------------------------------------------------------------#
+#-------------------------------------------------------------------#
 
 # List of artists
 artists = ["Asake","Burna-Boy","Jungle","Kendrick-Lamar", "SZA","Dua-Lipa", "JID","Teddy-Swims", "Bruno-Mars", "Lady-Gaga", "Coldplay", "Taylor-Swift", "Bad-Bunny", "The-Weeknd", "Billie-Eilish", "Ariana-Grande", "Drake", "Rihanna", "Ed-Sheeran", "Sabrina-Carpenter", "Justin-Bieber", "Ariana-Grande", "Eminem", "Kanye-West", "Post-Malone", "BTS", "Travis-Scott", "Doechii", "Imagine-Dragons", "J-Balvin", "Green-Day", "GloRilla", "Childish-Gambino", "Whitney-Houston", "Linkin-Park", "Donna-Summer"]
@@ -150,7 +152,7 @@ else:
 # Display the final DataFrame
 # print(final_df)
 
-#----------------- Load Data into Database ------------------#
+#---------------------- Load Data into Database ---------------------#
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -178,7 +180,7 @@ final_df.to_sql(
     index=False  
 )
 
-#--------------------------------------------------------------------------#
+#-------------------------------------------------------------------#
     
     
     
