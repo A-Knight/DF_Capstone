@@ -34,7 +34,7 @@ def get_token():
     token = json_result["access_token"]
     return token
 
-token = get_token()
+# token = get_token()
 
 # Show access token received from spotify
 # print(token)
@@ -84,79 +84,73 @@ def get_songs_by_artist(token, artist_id):
 
 #----------------------------------------------------------------
 
-token = get_token()
-result = search_for_artist(token, "Bruno-Mars")
+#Convert song duration from milliseconds to minutes:seconds
+def convert_mil_to_sec(df):
+    # Transform duration_ms into minutes and seconds (duration_min_sec)
+    df["duration_min_sec"] = df["duration_ms"].apply(lambda x: f"{x // 60000}:{(x % 60000) // 1000:02d}")
 
-# print(result)
-artist_id = result["id"]
+    # Drop the original duration_ms column 
+    df.drop(columns=["duration_ms"], inplace=True)
+    
+    return df
 
-# print(artist_id)
-# print(result["name"])
-songs = get_songs_by_artist(token, artist_id)
-# print(songs)
+#----------------------------------------------------------------
 
-# for idx, song in enumerate(songs):
-#     print(f"{idx + 1}. {song['name']}")
+#Construct Dataframe for an individual artist
+def get_artist_info(artist_name):
+    token = get_token()
+    artist_info = search_for_artist(token, artist_name)
+    artist_id = artist_info["id"]
+    artist_name = artist_info["name"]
+    artist_popularity = artist_info["popularity"]
+    song_info = get_songs_by_artist(token, artist_id)
+    
+    all_info = []
+    
+    # Iterate through all songs
+    for song in song_info:
+        all_info.append({
+            "artist_id": artist_id,
+            "artist_name": artist_name,  
+            "artist_popularity": artist_popularity,
+            "song_id": song["id"],
+            "song_name": song["name"],
+            "song_popularity": song["popularity"],
+            "duration_ms": song["duration_ms"]
+        })
+    
+    artist_df = pd.DataFrame(all_info)
+    all_info_df = convert_mil_to_sec(artist_df)
+    return all_info_df
 
-#------------------------------------------------------------------
-
-# df = pd.DataFrame(songs)
-# df2 = pd.DataFrame(result)
-df1 = pd.DataFrame(songs)
-
-# Select only the 'id', 'name', and 'popularity' columns
-filtered_df = df1[['id', 'name', 'popularity', 'duration_ms']]
-
-# Display the filtered DataFrame
-filtered_df
-
-#--------------------------------------------------------------------
+#------------------------------------------------------------------#
 
 # List of artists
-artists = ["Asake","Burna-Boy","Jungle","Kendrick-Lamar", "SZA","Dexta-Daps", "JID","Teddy-Swims", "Bruno-Mars", "Lady-Gaga", "Coldplay", "Taylor-Swift", "Bad-Bunny", "The-Weeknd", "Billie-Eilish", "Ariana-Grande", "Drake", "Rihanna", "Ed-Sheeran", "Sabrina-Carpenter", "Justin-Bieber", "Ariana-Grande", "Eminem", "Kanye-West", "Post-Malone", "BTS", "Travis-Scott"]
+artists = ["Asake","Burna-Boy","Jungle","Kendrick-Lamar", "SZA","Dua-Lipa", "JID","Teddy-Swims", "Bruno-Mars", "Lady-Gaga", "Coldplay", "Taylor-Swift", "Bad-Bunny", "The-Weeknd", "Billie-Eilish", "Ariana-Grande", "Drake", "Rihanna", "Ed-Sheeran", "Sabrina-Carpenter", "Justin-Bieber", "Ariana-Grande", "Eminem", "Kanye-West", "Post-Malone", "BTS", "Travis-Scott", "Doechii", "Imagine-Dragons", "J-Balvin", "Green-Day", "GloRilla", "Childish-Gambino", "Whitney-Houston", "Linkin-Park", "Donna-Summer"]
 
 # Initialize an empty list to store data for all artists
-all_songs_data = []
+all_artists_data = []
 
+# List of artists used to search api. Info returned used to create dataframe
 # Iterate over each artist in the list
 for artist_name in artists:
     try:
-        # Search for the artist
-        result = search_for_artist(token, artist_name)
-        if result is None:
-            print(f"No data found for artist: {artist_name}")
-            continue
-        
-        # Get the artist ID and name
-        artist_id = result["id"]
-        artist_name = result["name"]  # This extracts the correct name of the artist
-        artist_popularity = result["popularity"]
-        
-        # Fetch the top tracks for the artist
-        songs = get_songs_by_artist(token, artist_id)
-        
-        # Append relevant data from the songs to the list
-        for song in songs:
-            all_songs_data.append({
-                "id": song["id"],
-                "artist_name": artist_name,  # Add the artist's name to each song entry
-                "artist_popularity": artist_popularity,
-                "song_name": song["name"],
-                "song_popularity": song["popularity"],
-                "duration_ms": song["duration_ms"]
-                
-            })
+        # Use the get_artist_info function to retrieve and process artist data
+        artist_data = get_artist_info(artist_name)
+        all_artists_data.append(artist_data)  
     except Exception as e:
         print(f"An error occurred for artist {artist_name}: {e}")
 
-# Convert the collected data into a DataFrame
-final_df = pd.DataFrame(all_songs_data)
+# Combine all artist DataFrames into one
+if all_artists_data:  
+    final_df = pd.concat(all_artists_data, ignore_index=True)
+else:
+    final_df = pd.DataFrame()  # Create an empty DataFrame if no data was retrieved
 
-# Display the DataFrame
-# final_df
+# Display the final DataFrame
+# print(final_df)
 
-#-------------------------------------------------------
-
+#----------------- Load Data into Database ------------------#
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -174,12 +168,17 @@ connection_string = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dat
 # Create an SQLAlchemy engine
 engine = create_engine(connection_string)
 
-# Write the DataFrame to the database in the 'student' schema
-table_name = "ak_spotify"  # Desired table name
+# Write the DataFrame to the pagila database in the 'student' schema
+table_name = "ak_spotify"  
 final_df.to_sql(
     table_name,
     engine,
     schema="student",
-    if_exists="replace",  # Options: 'fail', 'replace', 'append'
-    index=False  # Do not write the DataFrame index as a column
+    if_exists="replace",  
+    index=False  
 )
+
+#--------------------------------------------------------------------------#
+    
+    
+    
