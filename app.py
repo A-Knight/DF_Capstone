@@ -125,9 +125,20 @@ elif visualization_option == "Artist Popularity":
 elif visualization_option == "Song Popularity by Artist":
     st.subheader("Song Popularity by Artist")
 
+    # Group data by artist and calculate mean popularity
     artist_popularity = data.groupby("artist_name")["song_popularity"].mean().reset_index()
-    bubble_sizes = artist_popularity["song_popularity"] * 10
 
+    # Normalize song popularity for bubble sizes (0 to 100 range, for example)
+    min_popularity = artist_popularity["song_popularity"].min()
+    max_popularity = artist_popularity["song_popularity"].max()
+    artist_popularity["normalized_popularity"] = (
+        (artist_popularity["song_popularity"] - min_popularity) / (max_popularity - min_popularity)
+    )
+
+    # Scale normalized popularity to define bubble sizes
+    bubble_sizes = artist_popularity["normalized_popularity"] * 1000  # Adjust multiplier for size
+
+    # Create the plot
     fig, ax = plt.subplots(figsize=(15, 8))
 
     scatter = ax.scatter(
@@ -140,6 +151,7 @@ elif visualization_option == "Song Popularity by Artist":
         linewidth=0.5
     )
 
+    # Add labels and grid
     ax.set_title("Average Song Popularity by Artist", fontsize=18, color="black", pad=20)
     ax.set_xlabel("Artist", fontsize=14)
     ax.set_ylabel("Average Song Popularity", fontsize=14)
@@ -149,6 +161,7 @@ elif visualization_option == "Song Popularity by Artist":
 
     plt.tight_layout()
     st.pyplot(fig)
+
 
 #--------------- Search For an Artist -----------------#
 
