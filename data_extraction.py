@@ -4,7 +4,6 @@ import os
 import base64
 from requests import post, get
 import json
-import psycopg2
 from sqlalchemy import create_engine
 
 #load the environment variables
