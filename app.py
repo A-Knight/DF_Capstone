@@ -1,14 +1,9 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import os
 import matplotlib.pyplot as plt
 from data_extraction import get_artist_info
 import plotly.express as px
-import seaborn as sns
 from wordcloud import WordCloud
-# from data_extraction import create_db_conn
 
 
 st.markdown(
