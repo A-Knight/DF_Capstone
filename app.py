@@ -8,7 +8,7 @@ from data_extraction import get_artist_info
 import plotly.express as px
 import seaborn as sns
 from wordcloud import WordCloud
-from data_extraction import create_db_conn
+# from data_extraction import create_db_conn
 
 
 st.markdown(
@@ -19,19 +19,40 @@ st.markdown(
 with st.expander("What is popularity?"):
     st.write("The popularity of a track is a value between 0 and 100, with 100 being the most popular. The popularity is calculated by algorithm and is based, in the most part, on the total number of plays the track has had and how recent those plays are.")
     st.write("The artist's popularity is calculated from the popularity of all the artist's tracks")
+
+
+
+# Deprecated db no longer in use    
+# #Create database connection
+# engine = create_db_conn()
+
+# # Fetch data from database
+# with open("utils/all_data.sql", "r") as file:
+#     all_data_query = file.read()
+# data = pd.read_sql(all_data_query, engine)
+
+# #duration_min_sec is in db as varchar. Have to convert to int in order to aggregate
+# with open("utils/avg_duration.sql", "r") as file:
+#     duration_query = file.read()
+# duration_data = pd.read_sql(duration_query, engine)
+
+# Load data from local CSV instead of PostgreSQL
+@st.cache_data
+def load_data():
+    df = pd.read_csv("spotify_data.csv")
     
-#Create database connection
-engine = create_db_conn()
+    # Convert "MM:SS" string in duration_min_sec to total seconds
+    mins_secs = df["duration_min_sec"].str.split(":", expand=True).astype(int)
+    df["song_length_seconds"] = mins_secs[0] * 60 + mins_secs[1]
+    
+    dur_df = (
+        df.groupby(["artist_name", "artist_popularity"], as_index=False)["song_length_seconds"]
+        .mean()
+        .rename(columns={"song_length_seconds": "avg_song_length_seconds"})
+    )
+    return df, dur_df
 
-# Fetch data from database
-with open("utils/all_data.sql", "r") as file:
-    all_data_query = file.read()
-data = pd.read_sql(all_data_query, engine)
-
-#duration_min_sec is in db as varchar. Have to convert to int in order to aggregate
-with open("utils/avg_duration.sql", "r") as file:
-    duration_query = file.read()
-duration_data = pd.read_sql(duration_query, engine)
+data, duration_data = load_data()
 
 
 #----------------- SELECT VISUAL ------------------#
