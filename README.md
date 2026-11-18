@@ -5,6 +5,9 @@
 - Perform any necessary cleaning and transformation of data
 - Load data into a database
 - Visualize data
+- Visit the live app here: [Spotify App](https://analysemusic.streamlit.app/)
+
+---
 
 ### Extraction Script Instructions
 
