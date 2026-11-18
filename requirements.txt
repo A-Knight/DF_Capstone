@@ -4,5 +4,4 @@ matplotlib
 plotly
 wordcloud
 requests
-seaborn
-sqlalchemy
+
